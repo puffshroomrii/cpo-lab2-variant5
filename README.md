@@ -27,55 +27,49 @@ The set supports `None` as a valid element and uses tombstone markers for deleti
 ## Contribution
 
 - Luo Mengyao -- Core implementation:
-  - immutable set structure
-  - open addressing logic
-  - probing
-  - resize policy
-  - `cons`
-  - `remove`
-  - `member`
-  - `length`
-  - `from_list`
-  - `to_list`
-  - `filter`
-  - `map`
-  - `reduce`
-  - `concat`
-  - `intersection`
-  - `empty`
-  - iterator
-
+    - immutable set structure
+    - open addressing logic
+    - probing
+    - resize policy
+    - `cons`
+    - `remove`
+    - `member`
+    - `length`
+    - `from_list`
+    - `to_list`
+    - `filter`
+    - `map`
+    - `reduce`
+    - `concat`
+    - `intersection`
+    - `empty`
+    - iterator
 - Du Huilin -- Testing and documentation:
-  - unit tests
-  - test coverage
-  - `README.md`
-  - project structure
+    - unit tests
+    - test coverage
+    - `README.md`
+    - project structure
 
 ## Changelog
 
 - 29.04.2026 - 1
-  - Implement immutable set for Lab 2.
-  - Add support for `None` using sentinel `_EMPTY`.
-  - Add full test suite for immutable version.
-
+    - Implement immutable set for Lab 2.
+    - Add support for `None` using sentinel `_EMPTY`.
+    - Add full test suite for immutable version.
 - 29.04.2026 - 0
-  - Initial Lab 2 setup.
+    - Initial Lab 2 setup.
 
 ## Design notes
 
 - Sentinel objects: `_EMPTY` and `_DELETED` are used to distinguish free
   slots, deleted slots, and actual `None` values. Using `None` as empty would
   conflict with storing `None` as a valid element.
-
 - Open addressing with linear probing: collisions are resolved by probing
   the next available slot.
-
 - Deletion: removed elements are marked with `_DELETED` to preserve probe chains.
-
 - Resize policy: when load factor exceeds 0.7, the table size is doubled.
-
 - Immutability: operations do not modify the original structure.
   Instead, a new set with an updated table is returned.
-
 - Map implementation: results are inserted into a new set to maintain
   uniqueness and avoid duplicates.
+ 
