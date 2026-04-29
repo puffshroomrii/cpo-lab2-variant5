@@ -25,7 +25,6 @@ All update operations return a new set and do not modify the original one.
 
 ## Contribution
 
-- Aleksandr Penskoi (EMAIL) -- all work.
 - Luo Mengyao – Core implementation: `HashMapOpenAddressSet` class, open
   addressing logic, tombstone handling, resize policy, `cons`, `remove`,
   `member`, `length`, `from_list`, `to_list`, `filter`, `map`, `reduce`,
