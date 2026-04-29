@@ -1,77 +1,58 @@
 # GROUP-5 - lab 2 - variant 5
 
-This is an **immutable set implementation** based on a hash table with
-**open addressing** (linear probing).
-
-All operations return a **new set** and do not modify the original one.
-The set supports `None` as a valid element and uses tombstone markers for deletion.
+This is an immutable set implementation based on a hash table with
+**open addressing** (linear probing).  
+It supports `None` as a valid element and uses tombstone markers for deletion.  
+All update operations return a new set and do not modify the original one.
 
 ## Project structure
 
-- hashmap_open_address_set.py -- Immutable set implementation.
-- test_hashmap_open_address_set.py -- Unit tests.
+- `hashmap_open_address_set.py` -- Immutable set implementation.
+- `test_hashmap_open_address_set.py` -- Unit tests.
 
 ## Features
 
-- Immutable operations (`cons`, `remove`) returning new sets
-- Membership test and size
+- Immutable `cons` and `remove` operations
+- Membership test, length
 - Convert to/from Python list
-- Functional operations: `map`, `filter`, `reduce`
+- Functional `filter` and `map`
+- Reduce (fold) over elements
 - Iterator support
 - Monoid: `empty()` and `concat()`
-- Set operation: `intersection`
+- Set operation: `intersection()`
 - Handles `None` correctly
 - Automatic resize when load factor > 0.7
-- Open addressing with linear probing
 
 ## Contribution
 
-- Luo Mengyao -- Core implementation:
-    - immutable set structure
-    - open addressing logic
-    - probing
-    - resize policy
-    - cons
-    - remove
-    - member
-    - length
-    - from_list
-    - to_list
-    - filter
-    - map
-    - reduce
-    - concat
-    - intersection
-    - empty
-    - iterator
-
-- Du Huilin -- Testing and documentation:
-    - unit tests
-    - test coverage
-    - README.md
-    - project structure
+- Aleksandr Penskoi (EMAIL) -- all work.
+- Luo Mengyao – Core implementation: `HashMapOpenAddressSet` class, open
+  addressing logic, tombstone handling, resize policy, `cons`, `remove`,
+  `member`, `length`, `from_list`, `to_list`, `filter`, `map`, `reduce`,
+  `concat`, `intersection`, `empty`, iterator.
+- Du Huilin – Testing and documentation: unit tests, test coverage,
+  `README.md` (project description, design notes, changelog), and GitHub
+  Actions configuration.
 
 ## Changelog
 
 - 29.04.2026 - 1
-    - Implement immutable set for Lab 2
-    - Add support for None using sentinel _EMPTY
-    - Add full test suite
-
+   - Add immutable set implementation.
+   - Add unit tests for lab 2.
+   - Update README for lab 2.
 - 29.04.2026 - 0
-    - Initial setup
+   - Initial
 
 ## Design notes
 
-- Sentinel objects: _EMPTY and _DELETED distinguish empty slots, deleted slots,
-  and actual None values.
-
-- Open addressing with linear probing is used for collision resolution.
-
-- Deletion uses _DELETED to preserve probing chains.
-
-- Resize policy: when load factor exceeds 0.7, the table size is doubled.
-
-- Immutability: operations create new sets instead of modifying existing ones.
-
-- Map implementation ensures uniqueness by inserting into a new set.
+- Sentinel objects: `_EMPTY` and `_DELETED` are used to distinguish free
+  slots, deleted slots, and actual `None` values. Using `None` as empty would
+  conflict with storing `None` as a valid element.
+- Open addressing with linear probing: Simple to implement and cache-friendly.
+  Deletion marks a slot as `_DELETED` to keep probe chains intact for future
+  lookups.
+- Resize policy: When load factor exceeds 0.7, the table size is doubled.
+- Immutable operations: `cons`, `remove`, `filter`, `map`, `concat`, and
+  `intersection` return new sets instead of modifying the original set.
+- Map implementation: Mapped values are inserted into a new set, so duplicate
+  results are removed and the set property is preserved.
