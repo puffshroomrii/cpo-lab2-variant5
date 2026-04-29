@@ -8,8 +8,8 @@ The set supports `None` as a valid element and uses tombstone markers for deleti
 
 ## Project structure
 
-- `hashmap_open_address_set.py` -- Immutable set implementation.
-- `test_hashmap_open_address_set.py` -- Unit tests.
+- hashmap_open_address_set.py -- Immutable set implementation.
+- test_hashmap_open_address_set.py -- Unit tests.
 
 ## Features
 
@@ -31,45 +31,47 @@ The set supports `None` as a valid element and uses tombstone markers for deleti
     - open addressing logic
     - probing
     - resize policy
-    - `cons`
-    - `remove`
-    - `member`
-    - `length`
-    - `from_list`
-    - `to_list`
-    - `filter`
-    - `map`
-    - `reduce`
-    - `concat`
-    - `intersection`
-    - `empty`
+    - cons
+    - remove
+    - member
+    - length
+    - from_list
+    - to_list
+    - filter
+    - map
+    - reduce
+    - concat
+    - intersection
+    - empty
     - iterator
+
 - Du Huilin -- Testing and documentation:
     - unit tests
     - test coverage
-    - `README.md`
+    - README.md
     - project structure
 
 ## Changelog
 
 - 29.04.2026 - 1
-    - Implement immutable set for Lab 2.
-    - Add support for `None` using sentinel `_EMPTY`.
-    - Add full test suite for immutable version.
+    - Implement immutable set for Lab 2
+    - Add support for None using sentinel _EMPTY
+    - Add full test suite
+
 - 29.04.2026 - 0
-    - Initial Lab 2 setup.
+    - Initial setup
 
 ## Design notes
 
-- Sentinel objects: `_EMPTY` and `_DELETED` are used to distinguish free
-  slots, deleted slots, and actual `None` values. Using `None` as empty would
-  conflict with storing `None` as a valid element.
-- Open addressing with linear probing: collisions are resolved by probing
-  the next available slot.
-- Deletion: removed elements are marked with `_DELETED` to preserve probe chains.
+- Sentinel objects: _EMPTY and _DELETED distinguish empty slots, deleted slots,
+  and actual None values.
+
+- Open addressing with linear probing is used for collision resolution.
+
+- Deletion uses _DELETED to preserve probing chains.
+
 - Resize policy: when load factor exceeds 0.7, the table size is doubled.
-- Immutability: operations do not modify the original structure.
-  Instead, a new set with an updated table is returned.
-- Map implementation: results are inserted into a new set to maintain
-  uniqueness and avoid duplicates.
- 
+
+- Immutability: operations create new sets instead of modifying existing ones.
+
+- Map implementation ensures uniqueness by inserting into a new set.
