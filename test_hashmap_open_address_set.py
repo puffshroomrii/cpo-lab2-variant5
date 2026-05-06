@@ -1,3 +1,6 @@
+from hypothesis import given
+from hypothesis import strategies as st
+
 from hashmap_open_address_set import (
     HashMapOpenAddressSet,
     concat,
@@ -168,3 +171,68 @@ def test_immutable_remove():
 
     assert member(2, s1)
     assert not member(2, s2)
+
+
+@given(st.lists(st.integers()))
+def test_pbt_from_list_length_equals_unique_count(values):
+    s = from_list(values)
+
+    assert length(s) == len(set(values))
+
+
+@given(st.lists(st.integers()), st.integers())
+def test_pbt_cons_existing_value_does_not_change_size(values, value):
+    s = from_list(values)
+    s_with_value = cons(value, s)
+    s_with_duplicate = cons(value, s_with_value)
+
+    assert length(s_with_value) == length(s_with_duplicate)
+
+
+@given(st.lists(st.integers()))
+def test_pbt_to_list_contains_same_values(values):
+    s = from_list(values)
+
+    assert set(to_list(s)) == set(values)
+
+
+@given(st.lists(st.integers()), st.lists(st.integers()))
+def test_pbt_concat_contains_union(values1, values2):
+    s1 = from_list(values1)
+    s2 = from_list(values2)
+    result = concat(s1, s2)
+
+    assert set(to_list(result)) == set(values1) | set(values2)
+
+
+@given(st.lists(st.integers()), st.lists(st.integers()))
+def test_pbt_intersection_contains_common_values(values1, values2):
+    s1 = from_list(values1)
+    s2 = from_list(values2)
+    result = intersection(s1, s2)
+
+    assert set(to_list(result)) == set(values1) & set(values2)
+
+
+@given(st.lists(st.integers()))
+def test_pbt_filter_keeps_only_matching_values(values):
+    s = from_list(values)
+    result = filter(s, lambda x: x % 2 == 0)
+
+    assert set(to_list(result)) == {x for x in values if x % 2 == 0}
+
+
+@given(st.lists(st.integers()))
+def test_pbt_map_preserves_set_property(values):
+    s = from_list(values)
+    result = map(s, lambda x: x % 10)
+
+    assert set(to_list(result)) == {x % 10 for x in values}
+
+
+@given(st.lists(st.integers()))
+def test_pbt_reduce_sum(values):
+    s = from_list(values)
+    result = reduce(s, lambda acc, x: acc + x, 0)
+
+    assert result == sum(set(values))

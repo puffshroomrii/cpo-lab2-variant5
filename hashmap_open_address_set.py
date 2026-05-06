@@ -5,6 +5,8 @@ _DELETED = object()
 
 
 class HashMapOpenAddressSet:
+    """Immutable set implemented with open addressing."""
+
     def __init__(self, values=(), capacity=8):
         self._capacity = max(capacity, 8)
         self._size = 0
@@ -49,7 +51,9 @@ def _find_slot(value, table):
         item = table[index]
 
         if item is _EMPTY:
-            return first_deleted if first_deleted is not None else index
+            if first_deleted is not None:
+                return first_deleted
+            return index
 
         if item is _DELETED:
             if first_deleted is None:
@@ -160,17 +164,17 @@ def map(s, function):
 
 
 def reduce(s, function, initial=None):
-    items = to_list(s)
+    iterator = iter(s)
 
     if initial is None:
-        if not items:
+        try:
+            result = next(iterator)
+        except StopIteration:
             raise TypeError("reduce() of empty set with no initial value")
-        result = items[0]
-        items = items[1:]
     else:
         result = initial
 
-    for item in items:
+    for item in iterator:
         result = function(result, item)
 
     return result
