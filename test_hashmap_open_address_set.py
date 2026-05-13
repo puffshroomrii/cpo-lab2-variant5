@@ -215,7 +215,7 @@ def test_pbt_concat_contains_all_input_values(values1, values2):
 
 
 @given(st.lists(st.integers()))
-def test_pbt_concat_identity(values):
+def test_pbt_monoid_identity(values):
     s = from_list(values)
 
     assert concat(empty(), s) == s
@@ -227,7 +227,7 @@ def test_pbt_concat_identity(values):
     st.lists(st.integers()),
     st.lists(st.integers()),
 )
-def test_pbt_concat_associativity(values1, values2, values3):
+def test_pbt_monoid_associativity(values1, values2, values3):
     s1 = from_list(values1)
     s2 = from_list(values2)
     s3 = from_list(values3)
