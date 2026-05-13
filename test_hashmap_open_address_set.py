@@ -1,3 +1,5 @@
+import itertools
+
 from hypothesis import given
 from hypothesis import strategies as st
 
@@ -16,6 +18,70 @@ from hashmap_open_address_set import (
     remove,
     to_list,
 )
+
+
+def test_api():
+    empty_set = HashMapOpenAddressSet()
+    s1 = cons(None, cons(2, cons("a", empty_set)))
+    s2 = cons("a", cons(None, cons(2, empty_set)))
+
+    assert str(empty_set) == "{}"
+    assert str(s1) in [
+        "{'a', 2, None}",
+        "{'a', None, 2}",
+        "{2, 'a', None}",
+        "{2, None, 'a'}",
+        "{None, 2, 'a'}",
+        "{None, 'a', 2}",
+    ]
+
+    assert empty_set != s1
+    assert empty_set != s2
+    assert s1 == s2
+    assert s1 == cons(None, cons(2, cons("a", s1)))
+
+    assert length(empty_set) == 0
+    assert length(s1) == 3
+    assert length(s2) == 3
+
+    assert str(remove(s1, None)) in [
+        "{'a', 2}",
+        "{2, 'a'}",
+    ]
+    assert str(remove(s1, "a")) in [
+        "{2, None}",
+        "{None, 2}",
+    ]
+
+    assert not member(None, empty_set)
+    assert member(None, s1)
+    assert member("a", s1)
+    assert member(2, s1)
+    assert not member(3, s1)
+
+    assert intersection(s1, s2) == s1
+    assert intersection(s1, s2) == s2
+    assert intersection(s1, empty_set) == empty_set
+
+    only_none = cons(None, empty_set)
+    assert intersection(s1, only_none) == only_none
+
+    expected_orders = [
+        list(items)
+        for items in itertools.permutations(["a", 2, None])
+    ]
+    assert to_list(s1) in expected_orders
+
+    assert s1 == from_list(["a", 2, None])
+    assert s1 == from_list([2, "a", 2, None])
+
+    assert concat(s1, s2) == from_list(["a", 2, None])
+
+    buf = []
+    for item in s1:
+        buf.append(item)
+
+    assert buf in expected_orders
 
 
 def test_empty():

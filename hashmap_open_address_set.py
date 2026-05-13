@@ -3,10 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Iterable, Iterator
-from typing import Any, TypeVar, overload
-
-T = TypeVar("T")
-U = TypeVar("U")
+from typing import Any, overload
 
 
 _EMPTY = object()
@@ -78,7 +75,6 @@ def _find_slot(value: Any, table: tuple[Any, ...] | list[Any]) -> int | None:
         if item is _DELETED:
             if first_deleted is None:
                 first_deleted = index
-
         elif item == value:
             return index
 
