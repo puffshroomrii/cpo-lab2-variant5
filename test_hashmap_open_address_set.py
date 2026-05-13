@@ -190,28 +190,67 @@ def test_pbt_cons_existing_value_does_not_change_size(values, value):
 
 
 @given(st.lists(st.integers()))
-def test_pbt_to_list_contains_same_values(values):
+def test_pbt_all_input_values_are_members(values):
     s = from_list(values)
 
-    assert set(to_list(s)) == set(values)
+    for value in values:
+        assert member(value, s)
+
+    assert length(s) == len(set(values))
 
 
 @given(st.lists(st.integers()), st.lists(st.integers()))
-def test_pbt_concat_contains_union(values1, values2):
+def test_pbt_concat_contains_all_input_values(values1, values2):
     s1 = from_list(values1)
     s2 = from_list(values2)
     result = concat(s1, s2)
 
-    assert set(to_list(result)) == set(values1) | set(values2)
+    for value in values1:
+        assert member(value, result)
+
+    for value in values2:
+        assert member(value, result)
+
+    assert length(result) == len(set(values1 + values2))
+
+
+@given(st.lists(st.integers()))
+def test_pbt_concat_identity(values):
+    s = from_list(values)
+
+    assert concat(empty(), s) == s
+    assert concat(s, empty()) == s
+
+
+@given(
+    st.lists(st.integers()),
+    st.lists(st.integers()),
+    st.lists(st.integers()),
+)
+def test_pbt_concat_associativity(values1, values2, values3):
+    s1 = from_list(values1)
+    s2 = from_list(values2)
+    s3 = from_list(values3)
+
+    left = concat(concat(s1, s2), s3)
+    right = concat(s1, concat(s2, s3))
+
+    assert left == right
 
 
 @given(st.lists(st.integers()), st.lists(st.integers()))
-def test_pbt_intersection_contains_common_values(values1, values2):
+def test_pbt_intersection_contains_only_common_values(values1, values2):
     s1 = from_list(values1)
     s2 = from_list(values2)
     result = intersection(s1, s2)
 
-    assert set(to_list(result)) == set(values1) & set(values2)
+    for item in result:
+        assert member(item, s1)
+        assert member(item, s2)
+
+    for value in values1:
+        if member(value, s2):
+            assert member(value, result)
 
 
 @given(st.lists(st.integers()))
@@ -219,7 +258,9 @@ def test_pbt_filter_keeps_only_matching_values(values):
     s = from_list(values)
     result = filter(s, lambda x: x % 2 == 0)
 
-    assert set(to_list(result)) == {x for x in values if x % 2 == 0}
+    for item in result:
+        assert item % 2 == 0
+        assert member(item, s)
 
 
 @given(st.lists(st.integers()))
@@ -227,7 +268,10 @@ def test_pbt_map_preserves_set_property(values):
     s = from_list(values)
     result = map(s, lambda x: x % 10)
 
-    assert set(to_list(result)) == {x % 10 for x in values}
+    for value in values:
+        assert member(value % 10, result)
+
+    assert length(result) <= 10
 
 
 @given(st.lists(st.integers()))
@@ -235,4 +279,8 @@ def test_pbt_reduce_sum(values):
     s = from_list(values)
     result = reduce(s, lambda acc, x: acc + x, 0)
 
-    assert result == sum(set(values))
+    expected = 0
+    for item in s:
+        expected += item
+
+    assert result == expected

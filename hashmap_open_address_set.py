@@ -28,9 +28,15 @@ class HashMapOpenAddressSet:
     def __eq__(self, other):
         if not isinstance(other, HashMapOpenAddressSet):
             return False
-        return length(self) == length(other) and all(
-            member(item, other) for item in self
-        )
+
+        if length(self) != length(other):
+            return False
+
+        for item in self:
+            if not member(item, other):
+                return False
+
+        return True
 
     def __str__(self):
         if self._size == 0:
