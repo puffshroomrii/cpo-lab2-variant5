@@ -27,12 +27,12 @@ def test_api():
 
     assert str(empty_set) == "{}"
     assert str(s1) in [
-        "{'a', 2, None}",
-        "{'a', None, 2}",
-        "{2, 'a', None}",
-        "{2, None, 'a'}",
-        "{None, 2, 'a'}",
-        "{None, 'a', 2}",
+        "{a, 2, None}",
+        "{a, None, 2}",
+        "{2, a, None}",
+        "{2, None, a}",
+        "{None, 2, a}",
+        "{None, a, 2}",
     ]
 
     assert empty_set != s1
@@ -45,8 +45,8 @@ def test_api():
     assert length(s2) == 3
 
     assert str(remove(s1, None)) in [
-        "{'a', 2}",
-        "{2, 'a'}",
+        "{a, 2}",
+        "{2, a}",
     ]
     assert str(remove(s1, "a")) in [
         "{2, None}",
