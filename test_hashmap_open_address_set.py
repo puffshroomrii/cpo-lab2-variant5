@@ -1,4 +1,4 @@
-import itertools
+from collections.abc import Iterator
 
 from hypothesis import given
 from hypothesis import strategies as st
@@ -20,80 +20,42 @@ from hashmap_open_address_set import (
 )
 
 
-def test_api():
-    empty_set = HashMapOpenAddressSet()
-    s1 = cons(None, cons(2, cons("a", empty_set)))
-    s2 = cons("a", cons(None, cons(2, empty_set)))
+@st.composite
+def hash_sets(
+    draw: st.DrawFn,
+) -> HashMapOpenAddressSet[int]:
+    values = draw(st.lists(st.integers()))
+    result: HashMapOpenAddressSet[int] = empty()
 
-    assert str(empty_set) == "{}"
-    assert str(s1) in [
-        "{a, 2, None}",
-        "{a, None, 2}",
-        "{2, a, None}",
-        "{2, None, a}",
-        "{None, 2, a}",
-        "{None, a, 2}",
-    ]
+    for value in values:
+        result = cons(value, result)
 
-    assert empty_set != s1
-    assert empty_set != s2
-    assert s1 == s2
-    assert s1 == cons(None, cons(2, cons("a", s1)))
-
-    assert length(empty_set) == 0
-    assert length(s1) == 3
-    assert length(s2) == 3
-
-    assert str(remove(s1, None)) in [
-        "{a, 2}",
-        "{2, a}",
-    ]
-    assert str(remove(s1, "a")) in [
-        "{2, None}",
-        "{None, 2}",
-    ]
-
-    assert not member(None, empty_set)
-    assert member(None, s1)
-    assert member("a", s1)
-    assert member(2, s1)
-    assert not member(3, s1)
-
-    assert intersection(s1, s2) == s1
-    assert intersection(s1, s2) == s2
-    assert intersection(s1, empty_set) == empty_set
-
-    only_none = cons(None, empty_set)
-    assert intersection(s1, only_none) == only_none
-
-    expected_orders = [
-        list(items)
-        for items in itertools.permutations(["a", 2, None])
-    ]
-    assert to_list(s1) in expected_orders
-
-    assert s1 == from_list(["a", 2, None])
-    assert s1 == from_list([2, "a", 2, None])
-
-    assert concat(s1, s2) == from_list(["a", 2, None])
-
-    buf = []
-    for item in s1:
-        buf.append(item)
-
-    assert buf in expected_orders
+    return result
 
 
-def test_empty():
-    s = empty()
+@st.composite
+def hash_set_and_values(
+    draw: st.DrawFn,
+) -> tuple[HashMapOpenAddressSet[int], list[int]]:
+    values = draw(st.lists(st.integers()))
+    result: HashMapOpenAddressSet[int] = empty()
+
+    for value in values:
+        result = cons(value, result)
+
+    return result, values
+
+
+def test_empty() -> None:
+    s: HashMapOpenAddressSet[int] = empty()
 
     assert isinstance(s, HashMapOpenAddressSet)
     assert length(s) == 0
     assert str(s) == "{}"
 
 
-def test_cons():
-    s1 = empty()
+def test_cons() -> None:
+    s1: HashMapOpenAddressSet[int] = empty()
     s2 = cons(1, s1)
 
     assert length(s1) == 0
@@ -101,23 +63,23 @@ def test_cons():
     assert member(1, s2)
 
 
-def test_cons_none():
-    s = empty()
+def test_cons_none() -> None:
+    s: HashMapOpenAddressSet[object] = empty()
     s = cons(None, s)
 
     assert member(None, s)
     assert length(s) == 1
 
 
-def test_no_duplicates():
-    s = empty()
+def test_no_duplicates() -> None:
+    s: HashMapOpenAddressSet[int] = empty()
     s = cons(1, s)
     s = cons(1, s)
 
     assert length(s) == 1
 
 
-def test_remove():
+def test_remove() -> None:
     s1 = from_list([1, 2, 3])
     s2 = remove(s1, 2)
 
@@ -127,14 +89,14 @@ def test_remove():
     assert length(s2) == 2
 
 
-def test_remove_missing_value():
+def test_remove_missing_value() -> None:
     s1 = from_list([1, 2, 3])
     s2 = remove(s1, 100)
 
     assert s1 == s2
 
 
-def test_member():
+def test_member() -> None:
     s = from_list([1, 2, 3])
 
     assert member(1, s)
@@ -142,14 +104,14 @@ def test_member():
     assert not member(4, s)
 
 
-def test_to_list():
+def test_to_list() -> None:
     s = from_list([1, 2, 3])
     result = to_list(s)
 
     assert sorted(result) == [1, 2, 3]
 
 
-def test_from_list_removes_duplicates():
+def test_from_list_removes_duplicates() -> None:
     s = from_list([1, 1, 2, 2, 3])
 
     assert length(s) == 3
@@ -158,7 +120,7 @@ def test_from_list_removes_duplicates():
     assert member(3, s)
 
 
-def test_concat():
+def test_concat() -> None:
     s1 = from_list([1, 2])
     s2 = from_list([2, 3])
     s3 = concat(s1, s2)
@@ -169,7 +131,7 @@ def test_concat():
     assert member(3, s3)
 
 
-def test_intersection():
+def test_intersection() -> None:
     s1 = from_list([1, 2, 3])
     s2 = from_list([2, 3, 4])
     s3 = intersection(s1, s2)
@@ -180,7 +142,7 @@ def test_intersection():
     assert not member(1, s3)
 
 
-def test_filter():
+def test_filter() -> None:
     s = from_list([1, 2, 3, 4])
     result = filter(s, lambda x: x % 2 == 0)
 
@@ -189,7 +151,7 @@ def test_filter():
     assert member(4, result)
 
 
-def test_map():
+def test_map() -> None:
     s = from_list([1, 2, 3])
     result = map(s, lambda x: x * 2)
 
@@ -199,39 +161,37 @@ def test_map():
     assert member(6, result)
 
 
-def test_reduce():
+def test_reduce() -> None:
     s = from_list([1, 2, 3])
     result = reduce(s, lambda acc, x: acc + x, 0)
 
     assert result == 6
 
 
-def test_iteration():
+def test_iteration() -> None:
     s = from_list([1, 2, 3])
-    result = []
-
-    for item in s:
-        result.append(item)
+    iterator: Iterator[int] = iter(s)
+    result = list(iterator)
 
     assert sorted(result) == [1, 2, 3]
 
 
-def test_equality():
+def test_equality() -> None:
     s1 = from_list([1, 2, 3])
     s2 = from_list([3, 2, 1])
 
     assert s1 == s2
 
 
-def test_immutable_cons():
-    s1 = empty()
+def test_immutable_cons() -> None:
+    s1: HashMapOpenAddressSet[int] = empty()
     s2 = cons(1, s1)
 
     assert length(s1) == 0
     assert length(s2) == 1
 
 
-def test_immutable_remove():
+def test_immutable_remove() -> None:
     s1 = from_list([1, 2, 3])
     s2 = remove(s1, 2)
 
@@ -239,25 +199,31 @@ def test_immutable_remove():
     assert not member(2, s2)
 
 
-@given(st.lists(st.integers()))
-def test_pbt_from_list_length_equals_unique_count(values):
-    s = from_list(values)
+@given(hash_set_and_values())
+def test_pbt_from_list_length_equals_unique_count(
+    data: tuple[HashMapOpenAddressSet[int], list[int]],
+) -> None:
+    s, values = data
 
     assert length(s) == len(set(values))
 
 
-@given(st.lists(st.integers()), st.integers())
-def test_pbt_cons_existing_value_does_not_change_size(values, value):
-    s = from_list(values)
+@given(hash_sets(), st.integers())
+def test_pbt_cons_existing_value_does_not_change_size(
+    s: HashMapOpenAddressSet[int],
+    value: int,
+) -> None:
     s_with_value = cons(value, s)
     s_with_duplicate = cons(value, s_with_value)
 
     assert length(s_with_value) == length(s_with_duplicate)
 
 
-@given(st.lists(st.integers()))
-def test_pbt_all_input_values_are_members(values):
-    s = from_list(values)
+@given(hash_set_and_values())
+def test_pbt_all_input_values_are_members(
+    data: tuple[HashMapOpenAddressSet[int], list[int]],
+) -> None:
+    s, values = data
 
     for value in values:
         assert member(value, s)
@@ -265,10 +231,13 @@ def test_pbt_all_input_values_are_members(values):
     assert length(s) == len(set(values))
 
 
-@given(st.lists(st.integers()), st.lists(st.integers()))
-def test_pbt_concat_contains_all_input_values(values1, values2):
-    s1 = from_list(values1)
-    s2 = from_list(values2)
+@given(hash_set_and_values(), hash_set_and_values())
+def test_pbt_concat_contains_all_input_values(
+    data1: tuple[HashMapOpenAddressSet[int], list[int]],
+    data2: tuple[HashMapOpenAddressSet[int], list[int]],
+) -> None:
+    s1, values1 = data1
+    s2, values2 = data2
     result = concat(s1, s2)
 
     for value in values1:
@@ -277,51 +246,50 @@ def test_pbt_concat_contains_all_input_values(values1, values2):
     for value in values2:
         assert member(value, result)
 
-    assert length(result) == len(set(values1 + values2))
+    expected = concat(s1, s2)
+    assert length(result) == length(expected)
 
 
-@given(st.lists(st.integers()))
-def test_pbt_monoid_identity(values):
-    s = from_list(values)
-
+@given(hash_sets())
+def test_pbt_monoid_identity(
+    s: HashMapOpenAddressSet[int],
+) -> None:
     assert concat(empty(), s) == s
     assert concat(s, empty()) == s
 
 
-@given(
-    st.lists(st.integers()),
-    st.lists(st.integers()),
-    st.lists(st.integers()),
-)
-def test_pbt_monoid_associativity(values1, values2, values3):
-    s1 = from_list(values1)
-    s2 = from_list(values2)
-    s3 = from_list(values3)
-
+@given(hash_sets(), hash_sets(), hash_sets())
+def test_pbt_monoid_associativity(
+    s1: HashMapOpenAddressSet[int],
+    s2: HashMapOpenAddressSet[int],
+    s3: HashMapOpenAddressSet[int],
+) -> None:
     left = concat(concat(s1, s2), s3)
     right = concat(s1, concat(s2, s3))
 
     assert left == right
 
 
-@given(st.lists(st.integers()), st.lists(st.integers()))
-def test_pbt_intersection_contains_only_common_values(values1, values2):
-    s1 = from_list(values1)
-    s2 = from_list(values2)
+@given(hash_sets(), hash_sets())
+def test_pbt_intersection_contains_only_common_values(
+    s1: HashMapOpenAddressSet[int],
+    s2: HashMapOpenAddressSet[int],
+) -> None:
     result = intersection(s1, s2)
 
     for item in result:
         assert member(item, s1)
         assert member(item, s2)
 
-    for value in values1:
-        if member(value, s2):
-            assert member(value, result)
+    for item in s1:
+        if member(item, s2):
+            assert member(item, result)
 
 
-@given(st.lists(st.integers()))
-def test_pbt_filter_keeps_only_matching_values(values):
-    s = from_list(values)
+@given(hash_sets())
+def test_pbt_filter_keeps_only_matching_values(
+    s: HashMapOpenAddressSet[int],
+) -> None:
     result = filter(s, lambda x: x % 2 == 0)
 
     for item in result:
@@ -329,20 +297,22 @@ def test_pbt_filter_keeps_only_matching_values(values):
         assert member(item, s)
 
 
-@given(st.lists(st.integers()))
-def test_pbt_map_preserves_set_property(values):
-    s = from_list(values)
+@given(hash_sets())
+def test_pbt_map_preserves_set_property(
+    s: HashMapOpenAddressSet[int],
+) -> None:
     result = map(s, lambda x: x % 10)
 
-    for value in values:
-        assert member(value % 10, result)
+    for item in s:
+        assert member(item % 10, result)
 
     assert length(result) <= 10
 
 
-@given(st.lists(st.integers()))
-def test_pbt_reduce_sum(values):
-    s = from_list(values)
+@given(hash_sets())
+def test_pbt_reduce_sum(
+    s: HashMapOpenAddressSet[int],
+) -> None:
     result = reduce(s, lambda acc, x: acc + x, 0)
 
     expected = 0

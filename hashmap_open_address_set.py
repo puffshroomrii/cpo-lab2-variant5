@@ -3,26 +3,31 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Iterable, Iterator
-from typing import Any, overload
+from typing import Generic, TypeVar, overload
+
+T = TypeVar("T")
+U = TypeVar("U")
 
 
 _EMPTY = object()
 _DELETED = object()
 
 
-class HashMapOpenAddressSet:
+class HashMapOpenAddressSet(Generic[T]):
     """Immutable set implemented with open addressing."""
 
     def __init__(
         self,
-        values: Iterable[Any] = (),
+        values: Iterable[T] = (),
         capacity: int = 8,
     ) -> None:
         self._capacity = max(capacity, 8)
         self._size = 0
-        self._table: tuple[Any, ...] = tuple([_EMPTY] * self._capacity)
+        self._table: tuple[object, ...] = tuple(
+            [_EMPTY] * self._capacity,
+        )
 
-        current = self
+        current: HashMapOpenAddressSet[T] = self
         for value in values:
             current = cons(value, current)
 
@@ -30,10 +35,10 @@ class HashMapOpenAddressSet:
         self._size = current._size
         self._table = current._table
 
-    def __iter__(self) -> Iterator[Any]:
+    def __iter__(self) -> Iterator[T]:
         for item in self._table:
             if item is not _EMPTY and item is not _DELETED:
-                yield item
+                yield item  # type: ignore[misc]
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, HashMapOpenAddressSet):
@@ -55,11 +60,14 @@ class HashMapOpenAddressSet:
         return "{" + ", ".join(str(item) for item in self) + "}"
 
 
-def _index(value: Any, capacity: int) -> int:
+def _index(value: object, capacity: int) -> int:
     return hash(value) % capacity
 
 
-def _find_slot(value: Any, table: tuple[Any, ...] | list[Any]) -> int | None:
+def _find_slot(
+    value: object,
+    table: tuple[object, ...] | list[object],
+) -> int | None:
     capacity = len(table)
     index = _index(value, capacity)
     first_deleted: int | None = None
@@ -75,6 +83,7 @@ def _find_slot(value: Any, table: tuple[Any, ...] | list[Any]) -> int | None:
         if item is _DELETED:
             if first_deleted is None:
                 first_deleted = index
+
         elif item == value:
             return index
 
@@ -84,8 +93,8 @@ def _find_slot(value: Any, table: tuple[Any, ...] | list[Any]) -> int | None:
 
 
 def _contains_at_slot(
-    value: Any,
-    table: tuple[Any, ...] | list[Any],
+    value: object,
+    table: tuple[object, ...] | list[object],
     index: int | None,
 ) -> bool:
     if index is None:
@@ -95,20 +104,44 @@ def _contains_at_slot(
     return item is not _EMPTY and item is not _DELETED and item == value
 
 
-def _resize(s: HashMapOpenAddressSet) -> HashMapOpenAddressSet:
-    new_set = HashMapOpenAddressSet(capacity=s._capacity * 2)
+def _insert_into_table(
+    value: object,
+    table: list[object],
+) -> bool:
+    index = _find_slot(value, table)
+
+    if _contains_at_slot(value, table, index):
+        return False
+
+    if index is None:
+        raise RuntimeError("Hash table has no free slot")
+
+    table[index] = value
+    return True
+
+
+def _resize(s: HashMapOpenAddressSet[T]) -> HashMapOpenAddressSet[T]:
+    new_set: HashMapOpenAddressSet[T] = HashMapOpenAddressSet(
+        capacity=s._capacity * 2,
+    )
+
+    table = [_EMPTY] * new_set._capacity
+    size = 0
 
     for item in s:
-        new_set = cons(item, new_set)
+        if _insert_into_table(item, table):
+            size += 1
 
+    new_set._table = tuple(table)
+    new_set._size = size
     return new_set
 
 
-def empty() -> HashMapOpenAddressSet:
+def empty() -> HashMapOpenAddressSet[T]:
     return HashMapOpenAddressSet()
 
 
-def cons(value: Any, s: HashMapOpenAddressSet) -> HashMapOpenAddressSet:
+def cons(value: T, s: HashMapOpenAddressSet[T]) -> HashMapOpenAddressSet[T]:
     index = _find_slot(value, s._table)
 
     if _contains_at_slot(value, s._table, index):
@@ -116,24 +149,24 @@ def cons(value: Any, s: HashMapOpenAddressSet) -> HashMapOpenAddressSet:
 
     if (s._size + 1) / s._capacity > 0.7:
         s = _resize(s)
-        index = _find_slot(value, s._table)
-
-    if index is None:
-        raise RuntimeError("Hash table has no free slot")
 
     table = list(s._table)
-    table[index] = value
 
-    result = HashMapOpenAddressSet(capacity=s._capacity)
-    result._table = tuple(table)
-    result._size = s._size + 1
-    return result
+    if _insert_into_table(value, table):
+        result: HashMapOpenAddressSet[T] = HashMapOpenAddressSet(
+            capacity=s._capacity,
+        )
+        result._table = tuple(table)
+        result._size = s._size + 1
+        return result
+
+    return s
 
 
 def remove(
-    s: HashMapOpenAddressSet,
-    value: Any,
-) -> HashMapOpenAddressSet:
+    s: HashMapOpenAddressSet[T],
+    value: T,
+) -> HashMapOpenAddressSet[T]:
     index = _find_slot(value, s._table)
 
     if not _contains_at_slot(value, s._table, index):
@@ -145,26 +178,28 @@ def remove(
     table = list(s._table)
     table[index] = _DELETED
 
-    result = HashMapOpenAddressSet(capacity=s._capacity)
+    result: HashMapOpenAddressSet[T] = HashMapOpenAddressSet(
+        capacity=s._capacity,
+    )
     result._table = tuple(table)
     result._size = s._size - 1
     return result
 
 
-def length(s: HashMapOpenAddressSet) -> int:
+def length(s: HashMapOpenAddressSet[T]) -> int:
     return s._size
 
 
-def member(value: Any, s: HashMapOpenAddressSet) -> bool:
+def member(value: T, s: HashMapOpenAddressSet[T]) -> bool:
     index = _find_slot(value, s._table)
     return _contains_at_slot(value, s._table, index)
 
 
 def intersection(
-    s1: HashMapOpenAddressSet,
-    s2: HashMapOpenAddressSet,
-) -> HashMapOpenAddressSet:
-    result = empty()
+    s1: HashMapOpenAddressSet[T],
+    s2: HashMapOpenAddressSet[T],
+) -> HashMapOpenAddressSet[T]:
+    result: HashMapOpenAddressSet[T] = empty()
 
     for item in s1:
         if member(item, s2):
@@ -173,12 +208,12 @@ def intersection(
     return result
 
 
-def to_list(s: HashMapOpenAddressSet) -> list[Any]:
+def to_list(s: HashMapOpenAddressSet[T]) -> list[T]:
     return list(s)
 
 
-def from_list(values: Iterable[Any]) -> HashMapOpenAddressSet:
-    result = empty()
+def from_list(values: Iterable[T]) -> HashMapOpenAddressSet[T]:
+    result: HashMapOpenAddressSet[T] = empty()
 
     for value in values:
         result = cons(value, result)
@@ -187,22 +222,38 @@ def from_list(values: Iterable[Any]) -> HashMapOpenAddressSet:
 
 
 def concat(
-    s1: HashMapOpenAddressSet,
-    s2: HashMapOpenAddressSet,
-) -> HashMapOpenAddressSet:
-    result = s1
+    s1: HashMapOpenAddressSet[T],
+    s2: HashMapOpenAddressSet[T],
+) -> HashMapOpenAddressSet[T]:
+    new_capacity = max(8, s1._capacity)
+
+    while (s1._size + s2._size) / new_capacity > 0.7:
+        new_capacity *= 2
+
+    table = [_EMPTY] * new_capacity
+    size = 0
+
+    for item in s1:
+        if _insert_into_table(item, table):
+            size += 1
 
     for item in s2:
-        result = cons(item, result)
+        if _insert_into_table(item, table):
+            size += 1
 
+    result: HashMapOpenAddressSet[T] = HashMapOpenAddressSet(
+        capacity=new_capacity,
+    )
+    result._table = tuple(table)
+    result._size = size
     return result
 
 
 def filter(
-    s: HashMapOpenAddressSet,
-    predicate: Callable[[Any], bool],
-) -> HashMapOpenAddressSet:
-    result = empty()
+    s: HashMapOpenAddressSet[T],
+    predicate: Callable[[T], bool],
+) -> HashMapOpenAddressSet[T]:
+    result: HashMapOpenAddressSet[T] = empty()
 
     for item in s:
         if predicate(item):
@@ -212,10 +263,10 @@ def filter(
 
 
 def map(
-    s: HashMapOpenAddressSet,
-    function: Callable[[Any], Any],
-) -> HashMapOpenAddressSet:
-    result = empty()
+    s: HashMapOpenAddressSet[T],
+    function: Callable[[T], U],
+) -> HashMapOpenAddressSet[U]:
+    result: HashMapOpenAddressSet[U] = empty()
 
     for item in s:
         result = cons(function(item), result)
@@ -225,31 +276,31 @@ def map(
 
 @overload
 def reduce(
-    s: HashMapOpenAddressSet,
-    function: Callable[[Any, Any], Any],
-) -> Any:
+    s: HashMapOpenAddressSet[T],
+    function: Callable[[T, T], T],
+) -> T:
     ...
 
 
 @overload
 def reduce(
-    s: HashMapOpenAddressSet,
-    function: Callable[[Any, Any], Any],
-    initial: Any,
-) -> Any:
+    s: HashMapOpenAddressSet[T],
+    function: Callable[[U, T], U],
+    initial: U,
+) -> U:
     ...
 
 
 def reduce(
-    s: HashMapOpenAddressSet,
-    function: Callable[[Any, Any], Any],
-    initial: Any = None,
-) -> Any:
+    s: HashMapOpenAddressSet[T],
+    function: Callable[[object, T], object],
+    initial: object | None = None,
+) -> object:
     iterator = iter(s)
 
     if initial is None:
         try:
-            result = next(iterator)
+            result: object = next(iterator)
         except StopIteration as exc:
             raise TypeError(
                 "reduce() of empty set with no initial value",
