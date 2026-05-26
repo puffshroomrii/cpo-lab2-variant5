@@ -276,7 +276,7 @@ def map(
 
 def reduce(
     s: HashMapOpenAddressSet[T],
-    function: Callable[[object, T], object],
+    function: Callable[..., object],
     initial: object | None = None,
 ) -> object:
     iterator = iter(s)

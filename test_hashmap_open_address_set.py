@@ -164,8 +164,8 @@ def test_map() -> None:
 def test_reduce() -> None:
     s = from_list([1, 2, 3])
 
-    def add(acc: object, x: int) -> object:
-        return int(acc) + x
+    def add(acc: int, x: int) -> int:
+        return acc + x
 
     result = reduce(s, add, 0)
 
@@ -317,8 +317,8 @@ def test_pbt_map_preserves_set_property(
 def test_pbt_reduce_sum(
     s: HashMapOpenAddressSet[int],
 ) -> None:
-    def add(acc: object, x: int) -> object:
-        return int(acc) + x
+    def add(acc: int, x: int) -> int:
+        return acc + x
 
     result = reduce(s, add, 0)
 
