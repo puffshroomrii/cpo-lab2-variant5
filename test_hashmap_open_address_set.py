@@ -163,7 +163,11 @@ def test_map() -> None:
 
 def test_reduce() -> None:
     s = from_list([1, 2, 3])
-    result = reduce(s, lambda acc, x: acc + x, 0)
+
+    def add(acc: object, x: int) -> object:
+        return int(acc) + x
+
+    result = reduce(s, add, 0)
 
     assert result == 6
 
@@ -313,7 +317,10 @@ def test_pbt_map_preserves_set_property(
 def test_pbt_reduce_sum(
     s: HashMapOpenAddressSet[int],
 ) -> None:
-    result = reduce(s, lambda acc, x: acc + x, 0)
+    def add(acc: object, x: int) -> object:
+        return int(acc) + x
+
+    result = reduce(s, add, 0)
 
     expected = 0
     for item in s:
