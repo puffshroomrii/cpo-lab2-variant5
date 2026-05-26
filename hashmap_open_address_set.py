@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Iterable, Iterator
-from typing import Generic, TypeVar, overload
+from typing import Generic, TypeVar
 
 T = TypeVar("T")
 U = TypeVar("U")
@@ -272,23 +272,6 @@ def map(
         result = cons(function(item), result)
 
     return result
-
-
-@overload
-def reduce(
-    s: HashMapOpenAddressSet[T],
-    function: Callable[[T, T], T],
-) -> T:
-    ...
-
-
-@overload
-def reduce(
-    s: HashMapOpenAddressSet[T],
-    function: Callable[[U, T], U],
-    initial: U,
-) -> U:
-    ...
 
 
 def reduce(
