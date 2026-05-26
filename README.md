@@ -35,6 +35,8 @@ All update operations return a new set and do not modify the original one.
 
 ## Changelog
 
+- 26.05.2026 - 2
+   - Modify.
 - 29.04.2026 - 1
    - Add immutable set implementation.
    - Add unit tests for lab 2.
@@ -55,3 +57,16 @@ All update operations return a new set and do not modify the original one.
   `intersection` return new sets instead of modifying the original set.
 - Map implementation: Mapped values are inserted into a new set, so duplicate
   results are removed and the set property is preserved.
+
+## Conclusion
+
+- Compared with the mutable implementation from lab 1, the immutable set is
+  safer because operations do not modify the original structure.
+- Immutability reduces side effects and makes reasoning about program behavior
+  easier.
+- Immutable operations require creating new structures, so they may use more
+  memory and CPU time than the mutable version.
+- The mutable implementation is usually more efficient for frequent updates.
+- The immutable implementation is better for functional programming,
+  predictability, and safer state management.
+  
